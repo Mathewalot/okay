@@ -63,6 +63,7 @@ def get_response(question):
 
 # Streamlit App
 st.title("Radiology Consultation and Appointment Scheduling")
+st.image('logo.png', width=300)
 
 # Display the question and answer section
 st.header("Ask a Question")
@@ -73,7 +74,7 @@ if st.button("Submit Question"):
         answer = get_response(user_question)
         st.write("Answer:", answer)
     else:
-        st.write("Please enter a question.")
+        st.write("Please enter a question.(")
 
 # Display the appointment scheduling section
 st.header("Schedule an Appointment")
