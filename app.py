@@ -5,10 +5,9 @@ from langchain.prompts import PromptTemplate
 import pandas as pd
 import time
 import json
-from datetime import datetime
 
 # Load the text data
-file_path = 'radiologue.csv'
+file_path = '/content/radiologue.csv'
 text_data = pd.read_csv(file_path)
 
 # Initialize the OpenAI model
@@ -33,37 +32,38 @@ chain = LLMChain(llm=llm, prompt=prompt_template)
 # Function to generate data description for the health statistics
 def generate_data_description():
     sample_entries = text_data.sample(min(len(text_data), 5))  # Get up to 5 random rows
-    description = "The dataset contains various health statistics over different years. It includes data points such as Infant Mortality Rate, Life Expectancy, Maternal Mortality Rate, Prevalence of Diabetes, and Prevalence of Hypertension. The data is structured with the following columns:\n"
-    description += "- Keyword: A list of radiology.\n"
-    description += "- Response: The definition or meaning of all the keywords\n\n"
+    description = "The dataset contains various health statistics. It includes data points such as Infant Mortality Rate, Life Expectancy, Maternal Mortality Rate, Prevalence of Diabetes, and Prevalence of Hypertension. The data is structured with the following columns:\n"
+    description += "- Keyword: A list of radiology terms.\n"
+    description += "- Response: Definitions or meanings of all the terms.\n\n"
     description += "Example entries:\n"
     description += "\n".join(f"Keyword: {row['Keyword']}, Response: {row['Response']}" for _, row in sample_entries.iterrows())
     return description
 
 def get_response(question):
     data_description = generate_data_description()
+    st.write("Data Description:", data_description)  # Debugging line to check data description
     attempt = 0
     while True:
         try:
             response = chain.run(data_description=data_description, question=question)
+            st.write("Model Response:", response)  # Debugging line to check model response
             return response
         except Exception as e:
             error_message = str(e)
             if 'Rate limit' in error_message or 'quota' in error_message:
                 wait_time = 2 ** attempt  # Exponential backoff
-                print(f"Rate limit exceeded: {error_message}. Waiting for {wait_time} seconds before retrying...")
+                st.write(f"Rate limit exceeded: {error_message}. Waiting for {wait_time} seconds before retrying...")
                 time.sleep(wait_time)
                 attempt += 1
                 if attempt > 5:  # Limit the number of retries
-                    print("Exceeded maximum retry attempts.")
+                    st.write("Exceeded maximum retry attempts.")
                     break
             else:
-                print(f"An error occurred: {e}")
+                st.write(f"An error occurred: {e}")
                 break
 
 # Streamlit App
 st.title("Radiology Consultation and Appointment Scheduling")
-st.image('logo.png', width=300)
 
 # Display the question and answer section
 st.header("Ask a Question")
@@ -74,7 +74,7 @@ if st.button("Submit Question"):
         answer = get_response(user_question)
         st.write("Answer:", answer)
     else:
-        st.write("Please enter a question.(")
+        st.write("Please enter a question.")
 
 # Display the appointment scheduling section
 st.header("Schedule an Appointment")
