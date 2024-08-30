@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 # Load the text data
-file_path = '/content/radiologue.csv'
+file_path = 'radiologue.csv'
 text_data = pd.read_csv(file_path)
 
 # Initialize the OpenAI model
