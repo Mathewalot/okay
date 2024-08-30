@@ -1,10 +1,11 @@
-
 import streamlit as st
 from langchain.chains import LLMChain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 import pandas as pd
 import time
+import json
+from datetime import datetime
 
 # Load the text data
 file_path = '/content/radiologue.csv'
@@ -60,11 +61,46 @@ def get_response(question):
                 print(f"An error occurred: {e}")
                 break
 
-# Allow for dynamic input via user prompt
-if __name__ == "__main__":
-    while True:
-        user_question = input("Please enter your question or type 'exit' to quit: ")
-        if user_question.lower() == 'exit':
-            break
+# Streamlit App
+st.title("Radiology Consultation and Appointment Scheduling")
+
+# Display the question and answer section
+st.header("Ask a Question")
+user_question = st.text_input("Enter your question here:")
+
+if st.button("Submit Question"):
+    if user_question:
         answer = get_response(user_question)
-        print("Answer:", answer)
+        st.write("Answer:", answer)
+    else:
+        st.write("Please enter a question.")
+
+# Display the appointment scheduling section
+st.header("Schedule an Appointment")
+with st.form(key='appointment_form'):
+    name = st.text_input("Full Name")
+    email = st.text_input("Email")
+    phone = st.text_input("Phone Number")
+    date = st.date_input("Preferred Date")
+    time_slot = st.time_input("Preferred Time")
+    submit_button = st.form_submit_button("Book Appointment")
+    
+    if submit_button:
+        if name and email and phone and date and time_slot:
+            appointment_data = {
+                "name": name,
+                "email": email,
+                "phone": phone,
+                "date": date.strftime('%Y-%m-%d'),
+                "time": time_slot.strftime('%H:%M:%S')
+            }
+            
+            # Save appointment data to a file (or database)
+            try:
+                with open('appointments.json', 'a') as file:
+                    file.write(json.dumps(appointment_data) + "\n")
+                st.success("Appointment booked successfully!")
+            except Exception as e:
+                st.error(f"An error occurred while booking the appointment: {e}")
+        else:
+            st.warning("Please fill in all fields.")
